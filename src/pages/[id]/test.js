@@ -18,7 +18,7 @@ const fontBody = Space_Mono({
 });
 
 export async function getServerSideProps(context) {
-  const res = await fetch("http://localhost:3000/questions.json");
+  const res = await fetch("https://noodl-bowl.vercel.app/questions.json");
   const data = await res.json();
 
   const noodlCode = context.query.id;

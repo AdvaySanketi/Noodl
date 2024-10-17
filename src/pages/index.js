@@ -35,7 +35,7 @@ const IconComponent = ({ Icon }) => {
 };
 
 export async function getServerSideProps(context) {
-  const res = await fetch("http://localhost:3000/bowls.json");
+  const res = await fetch("https://noodl-bowl.vercel.app/bowls.json");
   const data = await res.json();
 
   const bowls = data.bowls || [];
