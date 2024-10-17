@@ -38,47 +38,53 @@ export default async function handler(req, res) {
       }
     } catch (error) {
       console.error("Error:", error);
-      res.status(500).json({ error: "Failed to perform action" });
+      res.status(500).json({ error: "Failed to add record" });
     }
-  } else {
-    const client = await clientPromise;
-    const db = client.db("main");
-    const col = db.collection("noodl");
+  } else if (req.method === "GET") {
+    try {
+      const client = await clientPromise;
+      const db = client.db("main");
+      const col = db.collection("noodl");
 
-    const currentUsername = req.headers.username;
-    const currentQuiz = req.headers.quiz;
+      const currentUsername = req.headers.username;
+      const currentQuiz = req.headers.quiz;
 
-    let result = await col
-      .find({ quiz: currentQuiz })
-      .sort({ score: -1 })
-      .limit(10)
-      .toArray();
+      let result = await col
+        .find({ quiz: currentQuiz })
+        .sort({ score: -1 })
+        .limit(10)
+        .toArray();
 
-    console.log(result);
+      console.log(result);
 
-    if (currentUsername && result.length > 0) {
-      const isCurrentUserInTopTen = result.some(
-        (user) => user.username === currentUsername
-      );
+      if (currentUsername && result.length > 0) {
+        const isCurrentUserInTopTen = result.some(
+          (user) => user.username === currentUsername
+        );
 
-      if (!isCurrentUserInTopTen) {
-        const currentUserRecord = await col.findOne({
-          username: currentUsername,
-        });
+        if (!isCurrentUserInTopTen) {
+          const currentUserRecord = await col.findOne({
+            username: currentUsername,
+          });
 
-        if (currentUserRecord) {
-          const allUsers = await col
-            .find({ quiz: currentQuiz })
-            .sort({ score: -1 })
-            .toArray();
+          if (currentUserRecord) {
+            const allUsers = await col
+              .find({ quiz: currentQuiz })
+              .sort({ score: -1 })
+              .toArray();
 
-          const currentUserRank =
-            allUsers.findIndex((user) => user.username === currentUsername) + 1;
-          currentUserRecord.rank = currentUserRank;
-          result.push(currentUserRecord);
+            const currentUserRank =
+              allUsers.findIndex((user) => user.username === currentUsername) +
+              1;
+            currentUserRecord.rank = currentUserRank;
+            result.push(currentUserRecord);
+          }
         }
       }
+      res.status(200).json(result);
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ error: "Failed to get records" });
     }
-    res.status(200).json(result);
   }
 }
