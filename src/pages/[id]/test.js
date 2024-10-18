@@ -35,7 +35,7 @@ export default function QuizPage({ questions }) {
   const router = useRouter();
   const { id: noodlCode } = router.query;
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(1800);
+  const [timeLeft, setTimeLeft] = useState(1200);
   const [isGameOver, setIsGameOver] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [isRunning, setIsRunning] = useState(true);
@@ -53,8 +53,6 @@ export default function QuizPage({ questions }) {
     const savedOptions = localStorage.getItem(`selectedOptions`);
     const savedTimeLeft = localStorage.getItem(`timeLeft`);
     const savedQuestionIndex = localStorage.getItem(`currentQuestionIndex`);
-
-    console.log(savedOptions, savedTimeLeft, savedQuestionIndex);
 
     if (savedOptions) setSelectedOptions(JSON.parse(savedOptions));
     if (savedTimeLeft) setTimeLeft(Number(savedTimeLeft));
@@ -92,7 +90,7 @@ export default function QuizPage({ questions }) {
 
         if (progressBarRef.current) {
           progressBarRef.current.style.transform = `scaleX(${
-            remaining / 1800
+            remaining / 1200
           })`;
         }
 
