@@ -35,10 +35,9 @@ const IconComponent = ({ Icon }) => {
 };
 
 export async function getServerSideProps(context) {
-  const res = await fetch("https://noodl-bowl.vercel.app/bowls.json");
-  const data = await res.json();
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASEURL}/api/bowls`);
+  const bowls = await res.json();
 
-  const bowls = data.bowls || [];
   const randomStyles = [...Array(20)].map(() => ({
     top: `${Math.random() * 100}%`,
     left: `${Math.random() * 100}%`,

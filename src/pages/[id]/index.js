@@ -32,10 +32,30 @@ const IconComponent = ({ Icon }) => {
   );
 };
 
-export default function LandingPage() {
+export async function getServerSideProps(context) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASEURL}/api/bowls`);
+  const bowls = await res.json();
+
+  return {
+    props: {
+      bowls,
+    },
+  };
+}
+
+export default function LandingPage({ bowls }) {
   const router = useRouter();
   const { id } = router.query;
   const [username, setUsername] = useState("");
+  const [valid, setValid] = useState(false);
+
+  useEffect(() => {
+    if (!bowls.includes(id)) {
+      router.push("/404");
+    } else {
+      setValid(true);
+    }
+  }, [id]);
 
   const formattedId = id
     ? id.charAt(0).toUpperCase() + id.slice(1).toLowerCase()
@@ -46,6 +66,12 @@ export default function LandingPage() {
     localStorage.setItem("username", username);
     router.push(`/${id}/test`);
   };
+
+  if (!valid) {
+    return (
+      <div className="min-h-screen bg-[hsl(210,100%,6%)] text-[hsl(180,100%,90%)] flex items-center justify-center"></div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col justify-between bg-gradient-to-b from-gray-900 to-black text-white">

@@ -18,20 +18,34 @@ const fontBody = Space_Mono({
 });
 
 export async function getServerSideProps(context) {
-  const res = await fetch("https://noodl-bowl.vercel.app/questions.json");
+  const noodlCode = context.query.id;
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASEURL}/api/noodl-questions`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        quiz: noodlCode,
+      },
+    }
+  );
   const data = await res.json();
 
-  const noodlCode = context.query.id;
-  const questions = data.questions[noodlCode] || [];
+  const result = await fetch(`${process.env.NEXT_PUBLIC_BASEURL}/api/bowls`);
+  const bowls = await result.json();
+
+  const questions = data[0].questions || [];
 
   return {
     props: {
       questions,
+      bowls,
     },
   };
 }
 
-export default function QuizPage({ questions }) {
+export default function QuizPage({ questions, bowls }) {
   const router = useRouter();
   const { id: noodlCode } = router.query;
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -42,8 +56,17 @@ export default function QuizPage({ questions }) {
   const [error, setError] = useState("");
   const [showSnackbar, setShowSnackbar] = useState(false);
   const [restoring, setRestoring] = useState(true);
+  const [valid, setValid] = useState(false);
   const progressBarRef = useRef(null);
   const startTimeRef = useRef(null);
+
+  useEffect(() => {
+    if (!bowls.includes(noodlCode)) {
+      router.push("/404");
+    } else {
+      setValid(true);
+    }
+  }, [noodlCode]);
 
   useEffect(() => {
     const username = localStorage.getItem("username");
@@ -200,6 +223,12 @@ export default function QuizPage({ questions }) {
       <div className="min-h-screen bg-[hsl(210,100%,6%)] text-[hsl(180,100%,90%)] flex items-center justify-center">
         <p className="text-2xl font-bold">Starting Quiz...</p>
       </div>
+    );
+  }
+
+  if (!valid) {
+    return (
+      <div className="min-h-screen bg-[hsl(210,100%,6%)] text-[hsl(180,100%,90%)] flex items-center justify-center"></div>
     );
   }
 

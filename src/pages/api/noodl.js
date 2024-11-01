@@ -55,8 +55,6 @@ export default async function handler(req, res) {
         .limit(10)
         .toArray();
 
-      console.log(result);
-
       if (currentUsername && result.length > 0) {
         const isCurrentUserInTopTen = result.some(
           (user) => user.username === currentUsername

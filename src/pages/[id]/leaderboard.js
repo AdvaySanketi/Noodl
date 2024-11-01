@@ -17,11 +17,31 @@ const fontBody = Space_Mono({
   variable: "--font-body",
 });
 
-export default function LeaderboardPage() {
+export async function getServerSideProps(context) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASEURL}/api/bowls`);
+  const bowls = await res.json();
+
+  return {
+    props: {
+      bowls,
+    },
+  };
+}
+
+export default function LeaderboardPage({ bowls }) {
   const router = useRouter();
   const { id: noodlCode } = router.query;
   const [users, setUsers] = useState([]);
   const [username, setUsername] = useState("");
+  const [valid, setValid] = useState(false);
+
+  useEffect(() => {
+    if (!bowls.includes(noodlCode)) {
+      router.push("/404");
+    } else {
+      setValid(true);
+    }
+  }, [noodlCode]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,6 +68,12 @@ export default function LeaderboardPage() {
       fetchData();
     }
   }, [noodlCode]);
+
+  if (!valid) {
+    return (
+      <div className="min-h-screen bg-[hsl(210,100%,6%)] text-[hsl(180,100%,90%)] flex items-center justify-center"></div>
+    );
+  }
 
   return (
     <div
