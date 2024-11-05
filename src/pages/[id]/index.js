@@ -114,7 +114,7 @@ export default function LandingPage({ bowls }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7, duration: 0.6, ease: "easeInOut" }}
             >
-              {`Cook ${formattedId} Bowl`}
+              {`Cook ${formattedId}`}
             </motion.button>
           </div>
         </div>

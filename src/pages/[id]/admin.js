@@ -69,6 +69,9 @@ export default function AdminPage({ bowls }) {
   useEffect(() => {
     if (noodlCode && isAuthenticated && valid) {
       fetchData();
+      const interval = setInterval(fetchData, 5000);
+
+      return () => clearInterval(interval);
     }
   }, [noodlCode, isAuthenticated, valid]);
 
@@ -84,12 +87,19 @@ export default function AdminPage({ bowls }) {
         },
       });
       const result = await response.json();
-      setUsers(result);
-      const totalAttempts = result.length;
+      setUsers(result["leaderboard"]);
+      const totalAttempts = result["leaderboard"].length;
       const averageScore =
-        result.reduce((sum, attempt) => sum + attempt.score, 0) / totalAttempts;
+        result["leaderboard"].reduce((sum, attempt) => sum + attempt.score, 0) /
+        totalAttempts;
 
-      setAnalytics({ ...analytics, totalAttempts, averageScore });
+      const totalTestTime = 20;
+      const averageTime =
+        totalAttempts > 0
+          ? totalTestTime * (averageScore / result["totalScore"])
+          : 0;
+
+      setAnalytics({ ...analytics, totalAttempts, averageScore, averageTime });
     } catch (error) {
       console.error("Failed to get users:", error);
     }
@@ -271,7 +281,7 @@ export default function AdminPage({ bowls }) {
               <div>
                 <p className="font-semibold text-lg">Average Time Spent</p>
                 <p className="text-2xl font-bold">
-                  {analytics.averageTime.toFixed(2)}s
+                  {analytics.averageTime.toFixed(2)}mins
                 </p>
               </div>
             </div>

@@ -264,7 +264,7 @@ export default function QuizPage({ questions, bowls }) {
         >
           {`Finish ${
             noodlCode.charAt(0).toUpperCase() + noodlCode.slice(1).toLowerCase()
-          } Bowl`}
+          }`}
         </button>
         <div className="bg-[hsl(210,100%,12%)] rounded-2xl overflow-hidden relative">
           <div className="p-6 flex flex-col gap-4">

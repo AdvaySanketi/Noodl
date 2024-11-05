@@ -5,6 +5,7 @@ export default async function handler(req, res) {
     const client = await clientPromise;
     const db = client.db("main");
     const col = db.collection("noodl");
+    const col_q = db.collection("noodl-questions");
 
     const currentQuiz = req.headers.quiz;
 
@@ -13,7 +14,14 @@ export default async function handler(req, res) {
       .sort({ score: -1 })
       .toArray();
 
-    res.status(200).json(result);
+    let score = await col_q
+      .find({ quiz: currentQuiz })
+      .project({ totalScore: 1 })
+      .toArray();
+
+    res
+      .status(200)
+      .json({ leaderboard: result, totalScore: score[0].totalScore });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "Failed to get leaderboard" });
