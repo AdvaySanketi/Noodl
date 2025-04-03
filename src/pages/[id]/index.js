@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { motion, useAnimation } from "framer-motion";
 import { LampContainer } from "../../components/lamp";
+import Cookies from 'js-cookie';
 
 const IconComponent = ({ Icon }) => {
   const controls = useAnimation();
@@ -64,6 +65,7 @@ export default function LandingPage({ bowls }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     localStorage.setItem("username", username);
+    Cookies.set("username", username, { secure: true, sameSite: "strict" });
     router.push(`/${id}/test`);
   };
 
