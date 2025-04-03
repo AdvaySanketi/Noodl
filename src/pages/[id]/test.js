@@ -35,6 +35,23 @@ export async function getServerSideProps(context) {
   const result = await fetch(`${process.env.NEXT_PUBLIC_BASEURL}/api/bowls`);
   const bowls = await result.json();
 
+  const init_res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASEURL}/api/init-test`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: username,
+        quizId: noodlCode,
+        data: {
+          selectedOptions: [],
+          timeLeft: 1200,
+          currentQuestionIndex: 0,
+        },
+      }),
+    }
+  );
+
   const questions = data[0].questions || [];
   return {
     props: {
@@ -58,12 +75,11 @@ export default function QuizPage({ questions, bowls }) {
   const [valid, setValid] = useState(false);
   const progressBarRef = useRef(null);
   const startTimeRef = useRef(null);
-  const saveTimerRef = useRef(null);
   const usernameRef = useRef(null);
 
   const saveProgress = async () => {
     if (!usernameRef.current || !noodlCode) return;
-    
+
     try {
       await fetch("/api/progress", {
         method: "POST",
@@ -75,8 +91,8 @@ export default function QuizPage({ questions, bowls }) {
           data: {
             selectedOptions,
             timeLeft,
-            currentQuestionIndex
-          }
+            currentQuestionIndex,
+          },
         }),
       });
     } catch (error) {
@@ -86,7 +102,7 @@ export default function QuizPage({ questions, bowls }) {
 
   const deleteProgress = async () => {
     if (!usernameRef.current || !noodlCode) return;
-    
+
     try {
       await fetch("/api/progress", {
         method: "POST",
@@ -94,7 +110,7 @@ export default function QuizPage({ questions, bowls }) {
         body: JSON.stringify({
           action: "delete",
           username: usernameRef.current,
-          quizId: noodlCode
+          quizId: noodlCode,
         }),
       });
     } catch (error) {
@@ -102,62 +118,47 @@ export default function QuizPage({ questions, bowls }) {
     }
   };
 
-  const init_test = async () => {
-    if (!usernameRef.current || !noodlCode) return;
-    
-    const init_res = await fetch(`/api/init-test`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: usernameRef.current,
-          quizId: noodlCode,
-          data: {
-            selectedOptions: [],
-            timeLeft: 1200,
-            currentQuestionIndex: 0
-          }
-        }),
-      }
-    );
-    console.log(init_res.json());
-  };
-
   useEffect(() => {
     if (!bowls.includes(noodlCode)) {
       router.push("/404");
     } else {
-        setValid(true);
+      setValid(true);
     }
-    
+
     const username = localStorage.getItem("username");
     if (!username) {
       router.push(`/${noodlCode}`);
     } else {
-        init_test();
-        usernameRef.current = username;
+      usernameRef.current = username;
     }
   }, [noodlCode, bowls, router]);
 
   useEffect(() => {
     const loadProgress = async () => {
       if (!usernameRef.current || !noodlCode) return;
-      
+
       try {
-        const response = await fetch(`/api/progress?username=${usernameRef.current}&quizId=${noodlCode}`);
+        const response = await fetch(
+          `/api/progress?username=${usernameRef.current}&quizId=${noodlCode}`
+        );
         const result = await response.json();
-        
+
         if (result.success && result.data) {
-          const { selectedOptions: savedOptions, timeLeft: savedTimeLeft, currentQuestionIndex: savedQuestionIndex } = result.data;
-          
+          const {
+            selectedOptions: savedOptions,
+            timeLeft: savedTimeLeft,
+            currentQuestionIndex: savedQuestionIndex,
+          } = result.data;
+
           if (savedOptions) setSelectedOptions(savedOptions);
           if (savedTimeLeft) setTimeLeft(Number(savedTimeLeft));
-          if (savedQuestionIndex !== undefined) setCurrentQuestionIndex(Number(savedQuestionIndex));
+          if (savedQuestionIndex !== undefined)
+            setCurrentQuestionIndex(Number(savedQuestionIndex));
         }
         setRestoring(false);
       } catch (error) {
-          console.error("Failed to load progress:", error);
-          setRestoring(false);
+        console.error("Failed to load progress:", error);
+        setRestoring(false);
       }
     };
 
@@ -179,10 +180,10 @@ export default function QuizPage({ questions, bowls }) {
       }
     };
 
-    router.events.on('routeChangeStart', handleRouteChange);
-    
+    router.events.on("routeChangeStart", handleRouteChange);
+
     return () => {
-      router.events.off('routeChangeStart', handleRouteChange);
+      router.events.off("routeChangeStart", handleRouteChange);
     };
   }, [noodlCode, router]);
 
@@ -253,7 +254,7 @@ export default function QuizPage({ questions, bowls }) {
               }
             }
           });
-          
+
           const username = usernameRef.current;
           const response = await fetch("/api/noodl", {
             method: "POST",
