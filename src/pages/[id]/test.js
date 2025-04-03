@@ -19,7 +19,7 @@ const fontBody = Space_Mono({
 
 export async function getServerSideProps(context) {
   const noodlCode = context.query.id;
-
+  const username = context.req.cookies.username || null;
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_BASEURL}/api/noodl-questions`,
     {
@@ -36,7 +36,6 @@ export async function getServerSideProps(context) {
   const bowls = await result.json();
 
   const questions = data[0].questions || [];
-
   return {
     props: {
       questions,
@@ -59,37 +58,133 @@ export default function QuizPage({ questions, bowls }) {
   const [valid, setValid] = useState(false);
   const progressBarRef = useRef(null);
   const startTimeRef = useRef(null);
+  const saveTimerRef = useRef(null);
+  const usernameRef = useRef(null);
+
+  const saveProgress = async () => {
+    if (!usernameRef.current || !noodlCode) return;
+    
+    try {
+      await fetch("/api/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "save",
+          username: usernameRef.current,
+          quizId: noodlCode,
+          data: {
+            selectedOptions,
+            timeLeft,
+            currentQuestionIndex
+          }
+        }),
+      });
+    } catch (error) {
+      console.error("Failed to save progress:", error);
+    }
+  };
+
+  const deleteProgress = async () => {
+    if (!usernameRef.current || !noodlCode) return;
+    
+    try {
+      await fetch("/api/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "delete",
+          username: usernameRef.current,
+          quizId: noodlCode
+        }),
+      });
+    } catch (error) {
+      console.error("Failed to delete progress:", error);
+    }
+  };
+
+  const init_test = async () => {
+    if (!usernameRef.current || !noodlCode) return;
+    
+    const init_res = await fetch(`/api/init-test`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: usernameRef.current,
+          quizId: noodlCode,
+          data: {
+            selectedOptions: [],
+            timeLeft: 1200,
+            currentQuestionIndex: 0
+          }
+        }),
+      }
+    );
+    console.log(init_res.json());
+  };
 
   useEffect(() => {
     if (!bowls.includes(noodlCode)) {
       router.push("/404");
     } else {
-      setValid(true);
+        setValid(true);
     }
-  }, [noodlCode]);
-
-  useEffect(() => {
+    
     const username = localStorage.getItem("username");
     if (!username) {
       router.push(`/${noodlCode}`);
+    } else {
+        init_test();
+        usernameRef.current = username;
     }
-    const savedOptions = localStorage.getItem(`selectedOptions`);
-    const savedTimeLeft = localStorage.getItem(`timeLeft`);
-    const savedQuestionIndex = localStorage.getItem(`currentQuestionIndex`);
+  }, [noodlCode, bowls, router]);
 
-    if (savedOptions) setSelectedOptions(JSON.parse(savedOptions));
-    if (savedTimeLeft) setTimeLeft(Number(savedTimeLeft));
-    if (savedQuestionIndex) setCurrentQuestionIndex(Number(savedQuestionIndex));
-    setRestoring(false);
+  useEffect(() => {
+    const loadProgress = async () => {
+      if (!usernameRef.current || !noodlCode) return;
+      
+      try {
+        const response = await fetch(`/api/progress?username=${usernameRef.current}&quizId=${noodlCode}`);
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+          const { selectedOptions: savedOptions, timeLeft: savedTimeLeft, currentQuestionIndex: savedQuestionIndex } = result.data;
+          
+          if (savedOptions) setSelectedOptions(savedOptions);
+          if (savedTimeLeft) setTimeLeft(Number(savedTimeLeft));
+          if (savedQuestionIndex !== undefined) setCurrentQuestionIndex(Number(savedQuestionIndex));
+        }
+        setRestoring(false);
+      } catch (error) {
+          console.error("Failed to load progress:", error);
+          setRestoring(false);
+      }
+    };
+
+    if (usernameRef.current && noodlCode) {
+      loadProgress();
+    }
   }, [noodlCode]);
 
   useEffect(() => {
     if (!restoring) {
-      localStorage.setItem(`selectedOptions`, JSON.stringify(selectedOptions));
-      localStorage.setItem(`timeLeft`, timeLeft);
-      localStorage.setItem(`currentQuestionIndex`, currentQuestionIndex);
+      saveProgress();
     }
-  }, [selectedOptions, timeLeft, currentQuestionIndex, noodlCode, restoring]);
+  }, [selectedOptions, timeLeft, currentQuestionIndex, restoring]);
+
+  useEffect(() => {
+    const handleRouteChange = (url) => {
+      if (!url.includes(`/${noodlCode}/quiz`)) {
+        handleSubmit();
+      }
+    };
+
+    router.events.on('routeChangeStart', handleRouteChange);
+    
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChange);
+    };
+  }, [noodlCode, router]);
 
   useEffect(() => {
     const timerId = setInterval(() => {
@@ -158,8 +253,8 @@ export default function QuizPage({ questions, bowls }) {
               }
             }
           });
-
-          const username = localStorage.getItem("username");
+          
+          const username = usernameRef.current;
           const response = await fetch("/api/noodl", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -179,9 +274,7 @@ export default function QuizPage({ questions, bowls }) {
             setError("Name Already Exists");
             setShowSnackbar(true);
           } else {
-            localStorage.removeItem(`selectedOptions`);
-            localStorage.removeItem(`timeLeft`);
-            localStorage.removeItem(`currentQuestionIndex`);
+            await deleteProgress();
             router.push(`/${noodlCode}/leaderboard`);
           }
         } catch (error) {
@@ -192,7 +285,7 @@ export default function QuizPage({ questions, bowls }) {
 
       updateScore();
     }
-  }, [isGameOver, selectedOptions, noodlCode]);
+  }, [isGameOver, selectedOptions, noodlCode, questions]);
 
   const handleOptionClick = (index) => {
     setSelectedOptions((prev) => {
@@ -306,7 +399,7 @@ export default function QuizPage({ questions, bowls }) {
               ))}
             </div>
           </div>
-          <div className="bg-[hsl(180,100%,90%)]/10 bg-[hsl(180,100%,90%)]/20 px-6 py-4 ">
+          <div className="bg-[hsl(180,100%,90%)]/20 px-6 py-4 ">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
                 <div className="text-[hsl(180,100%,90%)] text-sm">
@@ -353,7 +446,7 @@ export default function QuizPage({ questions, bowls }) {
         </div>
       </div>
 
-      <div className="w-full h-3 bg-[hsl(210,100%,90%)]/20 bg-[hsl(210,100%,90%)]/30 mt-4">
+      <div className="w-full h-3 bg-[hsl(210,100%,90%)]/30 mt-4">
         <div
           ref={progressBarRef}
           className="h-full bg-[hsl(180,100%,90%)] transition-transform duration-100 ease-linear"
