@@ -1,7 +1,10 @@
 import fs from "fs/promises";
 import path from "path";
 
-const PROGRESS_DIR = path.join(process.cwd(), "testprogress");
+const PROGRESS_DIR =
+  process.env.NODE_ENV === "production"
+    ? process.env.TESTPROGRESS_DIR
+    : path.join(process.cwd(), "testprogress");
 
 async function ensureProgressDir() {
   try {
