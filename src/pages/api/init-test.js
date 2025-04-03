@@ -3,7 +3,7 @@ import path from "path";
 
 const PROGRESS_DIR =
   process.env.NODE_ENV === "production"
-    ? process.env.TESTPROGRESS_DIR
+    ? process.env.TESTPROGRESS_DIR || "/tmp/testprogress"
     : path.join(process.cwd(), "testprogress");
 
 async function ensureProgressDir() {
@@ -23,17 +23,20 @@ export default async function handler(req, res) {
     try {
       const filename = `${username}-${quizId}.json`;
       const filePath = path.join(PROGRESS_DIR, filename);
-      const fileData = await fs.readFile(filePath, "utf8");
-      if (!fileData) {
-        await fs.writeFile(filePath, JSON.stringify(data));
-        res
-          .status(200)
-          .json({ success: true, message: "Test Initialized Successfully" });
-      } else {
-        res
+
+      try {
+        await fs.access(filePath);
+        return res
           .status(304)
           .json({ success: false, message: "File already exists" });
+      } catch {
+        // File does not exist, so proceed with writing
       }
+
+      await fs.writeFile(filePath, JSON.stringify(data));
+      res
+        .status(200)
+        .json({ success: true, message: "Test Initialized Successfully" });
     } catch (error) {
       console.error("Error init test:", error);
       res.status(500).json({ error: "Failed to init test" });

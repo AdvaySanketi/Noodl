@@ -3,7 +3,7 @@ import path from "path";
 
 const PROGRESS_DIR =
   process.env.NODE_ENV === "production"
-    ? process.env.TESTPROGRESS_DIR
+    ? process.env.TESTPROGRESS_DIR || "/tmp/testprogress"
     : path.join(process.cwd(), "testprogress");
 
 export default async function handler(req, res) {
