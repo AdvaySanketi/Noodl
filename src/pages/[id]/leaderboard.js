@@ -1,7 +1,6 @@
 import { Bricolage_Grotesque } from "next/font/google";
 import { Space_Mono } from "next/font/google";
 import { useRouter } from "next/router";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const fontHeading = Bricolage_Grotesque({
@@ -63,7 +62,7 @@ export default function LeaderboardPage({ bowls }) {
         console.error("Failed to get users:", error);
       }
     };
-
+  
     if (noodlCode) {
       fetchData();
     }

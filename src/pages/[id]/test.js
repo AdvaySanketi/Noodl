@@ -272,7 +272,8 @@ export default function QuizPage({ questions, bowls }) {
 
           if (!response.ok) {
             setIsGameOver(false);
-            setError("Name Already Exists");
+            const res = await response.json();
+            setError(res.error);
             setShowSnackbar(true);
           } else {
             await deleteProgress();
