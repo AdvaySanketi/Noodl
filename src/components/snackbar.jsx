@@ -31,17 +31,15 @@ export function NoodlSnackbar({ message, onClose, bgColor }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShow(false);
-      onClose();
+      setTimeout(onClose, 300); 
     }, 3000);
 
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [onClose]);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 bg-black text-white p-4 transition-opacity duration-300 ${
+      className={`fixed bottom-0 left-0 right-0 bg-black z-10 text-white p-4 transition-opacity duration-300 ${
         show ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
     >

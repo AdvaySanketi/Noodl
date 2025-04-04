@@ -12,8 +12,7 @@ import {
   DropdownMenuItem,
 } from "@/components/dropdown-menu";
 import { Button } from "@/components/button";
-import { FaBan, FaUser, FaChartLine, FaClock } from "react-icons/fa";
-import { TiTick } from "react-icons/ti";
+import { FaBan, FaUser, FaChartLine, FaClock, FaUnlockAlt } from "react-icons/fa";
 import { Card, CardContent, CardFooter } from "@/components/card";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
@@ -102,6 +101,35 @@ export default function AdminPage({ bowls }) {
       setAnalytics({ ...analytics, totalAttempts, averageScore, averageTime });
     } catch (error) {
       console.error("Failed to get users:", error);
+    }
+  };
+
+  const handleBanToggle = async (username) => {
+    try {
+      const response = await fetch("/api/ban-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          quizId: noodlCode,
+        }),
+      });
+  
+      const result = await response.json();
+      
+      if (result.success) {
+        setUsers(users.map(user => 
+          user.username === username 
+            ? { ...user, isBanned: !user.isBanned }
+            : user
+        ));
+      } else {
+        console.error("Failed to toggle ban status:", result.error);
+      }
+    } catch (error) {
+      console.error("Error toggling ban status:", error);
     }
   };
 
@@ -310,24 +338,24 @@ export default function AdminPage({ bowls }) {
               {users.map((user, index) => (
                 <tr
                   key={index}
-                  className={`${
-                    user.username == username
-                      ? "bg-[hsl(180,100%,15%)] border border-2 border-[hsl(210,100%,90%)]/10"
-                      : "border-b border-[hsl(180,100%,90%)]/10"
-                  }`}
+                  className={
+                    user.isBanned ? "bg-red-500/20 border-b border-[hsl(180,100%,90%)]/10" :
+                    "border-b border-[hsl(180,100%,90%)]/10"
+                  }
                 >
                   <td className="px-4 py-3 font-medium">
-                    {user.username == username && users.length == 11
-                      ? user.rank
-                      : index + 1}
+                    {index + 1}
                   </td>
                   <td className="px-4 py-3">{user.username}</td>
                   <td className="px-4 py-3 text-right">{user.score}</td>
                   <td className="px-4 py-3 text-right">{user.bonus}</td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => {}} className="text-red-500">
-                      {user.isBanned ? <TiTick /> : <FaBan />}
-                    </button>
+                  <button 
+                    onClick={() => handleBanToggle(user.username)} 
+                    className={`text-${user.isBanned ? "green" : "red"}-500`}
+                  >
+                  {user.isBanned ? <FaUnlockAlt color="#50C878"/> : <FaBan />}
+                  </button>
                   </td>
                 </tr>
               ))}

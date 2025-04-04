@@ -24,6 +24,9 @@ export default async function handler(req, res) {
             quiz: data.quiz,
           });
           if (existingUser) {
+            if (existingUser.isBanned === true) {
+              return res.status(403).json({ error: "Your username has been banned. Contact Admin for more details." });
+            }
             return res.status(400).json({ error: "Username already taken" });
           }
 
@@ -50,10 +53,11 @@ export default async function handler(req, res) {
       const currentQuiz = req.headers.quiz;
 
       let result = await col
-        .find({ quiz: currentQuiz })
+        .find({ quiz: currentQuiz, $or: [{ isBanned: { $exists: false } }, { isBanned: false }] }) 
         .sort({ score: -1 })
         .limit(10)
         .toArray();
+
 
       if (currentUsername && result.length > 0) {
         const isCurrentUserInTopTen = result.some(
@@ -63,7 +67,8 @@ export default async function handler(req, res) {
         if (!isCurrentUserInTopTen) {
           const currentUserRecord = await col.findOne({
             username: currentUsername,
-          });
+            $or: [{ isBanned: { $exists: false } }, { isBanned: false }] }
+          );
 
           if (currentUserRecord) {
             const allUsers = await col
