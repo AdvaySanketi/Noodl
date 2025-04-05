@@ -88,14 +88,16 @@ export default function LandingPage({ bowls, randomStyles }) {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col justify-between bg-[hsl(210,100%,6%)] text-[hsl(180,100%,90%)] ${fontBody.variable} ${fontHeading.variable}`}
+    <div
+      className={`min-h-screen flex flex-col justify-between bg-[hsl(210,100%,6%)] text-[hsl(180,100%,90%)] ${fontBody.variable} ${fontHeading.variable}`}
       style={{
         fontFamily: "var(--font-body)",
-      }}>
+      }}
+    >
       <header className="w-full py-4 px-6 absolute top-0 left-0 z-20">
         <div className="flex justify-end">
           <motion.button
-            onClick={() => window.location.href = "/create-quiz"}
+            onClick={() => (window.location.href = "/create-quiz")}
             className="bg-[hsl(200,100%,18%)] text-[hsl(180,100%,90%)] text-lg px-4 py-2 rounded-lg hover:bg-[hsl(200,100%,24%)] transition-colors shadow-lg"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -127,7 +129,14 @@ export default function LandingPage({ bowls, randomStyles }) {
           >
             Start by entering the noodl-bowl code below
           </motion.p>
-          <pre className="text-sm mb-7 text-[hsl(180,100%,90%)]/70">If you're an admin, enter "admin-&lt;noodl-bowl code&gt;"</pre> 
+          <motion.p
+            className="text-sm mb-7 text-[hsl(180,100%,90%)]/70"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+          >
+            If you're an admin, enter "admin-&lt;noodl-code&gt;"
+          </motion.p>
           <form onSubmit={handleRedirect} className="mb-12">
             <input
               type="text"
