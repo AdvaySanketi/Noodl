@@ -90,7 +90,6 @@ function CreateQuizPage() {
       quiz: !formData.quiz,
       adminUsername: !formData.adminUsername,
       adminPassword: !formData.adminPassword,
-      activeUntil: !formData.activeUntil,
     };
 
     setFormErrors((prev) => ({
