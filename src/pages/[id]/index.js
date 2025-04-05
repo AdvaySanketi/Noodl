@@ -7,7 +7,6 @@ import { LampContainer } from "../../components/lamp";
 import Cookies from 'js-cookie';
 import { Bricolage_Grotesque, Space_Mono } from "next/font/google";
 
-// Import the same fonts from the admin page
 const fontHeading = Bricolage_Grotesque({
   subsets: ["latin"],
   display: "swap",

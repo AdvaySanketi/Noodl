@@ -30,7 +30,7 @@ export default async function handler(req, res) {
           .status(304)
           .json({ success: false, message: "File already exists" });
       } catch {
-        // File does not exist, so proceed with writing
+        
       }
 
       await fs.writeFile(filePath, JSON.stringify(data));

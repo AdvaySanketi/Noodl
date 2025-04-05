@@ -8,7 +8,6 @@ import { FaBowlRice } from "react-icons/fa6";
 import { LuIceCream2 } from "react-icons/lu";
 import { Bricolage_Grotesque, Space_Mono } from "next/font/google";
 
-// Import the same fonts from the leaderboard page
 const fontHeading = Bricolage_Grotesque({
   subsets: ["latin"],
   display: "swap",
@@ -93,7 +92,6 @@ export default function LandingPage({ bowls, randomStyles }) {
       style={{
         fontFamily: "var(--font-body)",
       }}>
-      {/* Header with Create Quiz button and Logo */}
       <header className="w-full py-4 px-6 absolute top-0 left-0 z-20">
         <div className="flex justify-end">
           <motion.button

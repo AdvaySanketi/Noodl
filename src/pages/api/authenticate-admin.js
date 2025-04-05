@@ -26,7 +26,6 @@ export default async function handler(req, res) {
       });
     }
     
-    // Check if username and password match the stored credentials
     if (quiz.username === username && quiz.password === password) {
       return res.status(200).json({
         success: true,
