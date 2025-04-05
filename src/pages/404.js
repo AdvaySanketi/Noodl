@@ -8,7 +8,6 @@ export default function Component() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // Implement search functionality here
     console.log("Searching for:", searchQuery);
   };
 

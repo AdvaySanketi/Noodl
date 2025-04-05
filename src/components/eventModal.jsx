@@ -9,7 +9,6 @@ export function EventModal({ isOpen, onClose }) {
   const [eventDescription, setEventDescription] = useState("");
 
   const handleSubmit = () => {
-    // Handle form submission
     console.log({ eventName, eventDate, eventTime, eventDescription });
     onClose();
   };

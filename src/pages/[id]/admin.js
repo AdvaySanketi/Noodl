@@ -1,8 +1,10 @@
-import { Bricolage_Grotesque } from "next/font/google";
-import { Space_Mono } from "next/font/google";
+"use client";
+
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import { motion } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Bricolage_Grotesque, Space_Mono } from "next/font/google";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -133,17 +135,31 @@ export default function AdminPage({ bowls }) {
     }
   };
 
-  const handleLogin = () => {
-    const validAdminUsername = process.env.NEXT_PUBLIC_ADMIN_USERNAME;
-    const validAdminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+  const handleLogin = async () => {
+    try {
+      const response = await fetch("/api/authenticate-admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: adminUsername,
+          password: adminPassword,
+          quizId: noodlCode,
+        }),
+      });
 
-    if (
-      adminUsername === validAdminUsername &&
-      adminPassword === validAdminPassword
-    ) {
-      setIsAuthenticated(true);
-    } else {
-      setAuthError("Invalid username or password");
+      const result = await response.json();
+      
+      if (result.success) {
+        setIsAuthenticated(true);
+        setAuthError("");
+      } else {
+        setAuthError(result.message || "Invalid username or password");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setAuthError("Authentication failed. Please try again.");
     }
   };
 
@@ -183,16 +199,30 @@ export default function AdminPage({ bowls }) {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(210,100%,6%)] text-[hsl(180,100%,90%)]">
-        <div
+      <div 
+        className={`min-h-screen flex items-center justify-center bg-[hsl(210,100%,6%)] text-[hsl(180,100%,90%)] ${fontBody.variable} ${fontHeading.variable}`}
+        style={{
+          fontFamily: "var(--font-body)",
+        }}
+      >
+        
+        <motion.div
           className="bg-gradient-to-br from-[#0F172A] to-[#1E293B] rounded-lg shadow-lg max-w-sm w-full p-6"
           onClick={(e) => e.stopPropagation()}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.6 }}
         >
           <div className="text-center mb-6">
             <img src="/ramen.png" className="h-12 mx-auto mb-3" alt="Logo" />
-            <h1 className="text-3xl font-semibold text-primary">Admin Login</h1>
+            <h1 
+              className="text-3xl font-semibold text-[hsl(180,100%,90%)]"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              Admin Login
+            </h1>
           </div>
-          <Card className="bg-gray-700">
+          <Card className="bg-[hsl(210,100%,15%)]">
             <CardContent className="space-y-4">
               <div className="space-y-2 mt-5">
                 <Label htmlFor="username">Username</Label>
@@ -201,6 +231,7 @@ export default function AdminPage({ bowls }) {
                   placeholder="Enter your username"
                   value={adminUsername}
                   onChange={(e) => setAdminUsername(e.target.value)}
+                  className="bg-[hsl(210,100%,12%)] text-[hsl(180,100%,90%)] border border-[hsl(180,100%,90%)]/10 focus:outline-none focus:border-blue-500"
                 />
               </div>
               <div className="space-y-2">
@@ -211,6 +242,7 @@ export default function AdminPage({ bowls }) {
                   placeholder="Enter your password"
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
+                  className="bg-[hsl(210,100%,12%)] text-[hsl(180,100%,90%)] border border-[hsl(180,100%,90%)]/10 focus:outline-none focus:border-blue-500"
                 />
               </div>
               {authError && <p className="text-red-500 mb-4">{authError}</p>}
@@ -218,14 +250,14 @@ export default function AdminPage({ bowls }) {
             <CardFooter>
               <Button
                 variant="secondary"
-                className="w-full bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white"
+                className="w-full bg-[hsl(200,100%,18%)] hover:bg-[hsl(200,100%,24%)] text-[hsl(180,100%,90%)]"
                 onClick={handleLogin}
               >
                 Login
               </Button>
             </CardFooter>
           </Card>
-        </div>
+        </motion.div>
       </div>
     );
   }
