@@ -50,7 +50,10 @@ const IconComponent = ({ Icon }) => {
 
 export async function getServerSideProps(context) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASEURL}/api/bowls`);
-  const bowls = await res.json();
+  const activeBowls = await res.json();
+  
+  const resAll = await fetch(`${process.env.NEXT_PUBLIC_BASEURL}/api/bowls?includeInactive=true`);
+  const allBowls = await resAll.json();
 
   const randomStyles = [...Array(20)].map(() => ({
     top: `${Math.random() * 100}%`,
@@ -62,26 +65,29 @@ export async function getServerSideProps(context) {
 
   return {
     props: {
-      bowls,
+      activeBowls,
+      allBowls,
       randomStyles,
     },
   };
 }
 
-export default function LandingPage({ bowls, randomStyles }) {
+export default function LandingPage({ activeBowls, allBowls, randomStyles }) {
   const [quizCode, setQuizCode] = useState("");
 
   const handleRedirect = (e) => {
     e.preventDefault();
-    if (bowls.includes(quizCode)) {
-      window.location.href = `/${quizCode.replace(/\//g, "")}/`;
-    } else if (quizCode.startsWith("admin-")) {
+    
+    if (quizCode.startsWith("admin-")) {
       const code = quizCode.replace("admin-", "");
-      if (bowls.includes(code)) {
+      if (allBowls.includes(code)) {
         window.location.href = `/${code}/admin`;
       } else {
         window.location.href = `/404`;
       }
+    }
+    else if (activeBowls.includes(quizCode)) {
+      window.location.href = `/${quizCode.replace(/\//g, "")}/`;
     } else {
       window.location.href = `/404`;
     }
