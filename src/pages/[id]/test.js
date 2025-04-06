@@ -423,13 +423,7 @@ export default function QuizPage({ questions, bowls }) {
       </div>
 
       <div className="flex justify-center mt-4 flex-wrap">
-        <div
-          className={`grid ${
-            questions.length > 10
-              ? "grid-cols-10"
-              : `grid-cols-${questions.length}`
-          } gap-2`}
-        >
+      <div className="flex flex-wrap justify-center gap-2">
           {questions.map((_, index) => (
             <button
               key={index}

@@ -14,10 +14,11 @@ import {
   DropdownMenuItem,
 } from "@/components/dropdown-menu";
 import { Button } from "@/components/button";
-import { FaBan, FaUser, FaChartLine, FaClock, FaUnlockAlt } from "react-icons/fa";
+import { FaBan, FaUser, FaChartLine, FaClock, FaUnlockAlt, FaTrash } from "react-icons/fa";
 import { Card, CardContent, CardFooter } from "@/components/card";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
+import AdminSwitch from "@/components/admin-switch";
 
 const fontHeading = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -33,14 +34,24 @@ const fontBody = Space_Mono({
 });
 
 export async function getServerSideProps(context) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASEURL}/api/bowls`);
-  const bowls = await res.json();
-
-  return {
-    props: {
-      bowls,
-    },
-  };
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASEURL}/api/bowls?includeInactive=true`);
+    const data = await res.json();
+    const bowls = Array.isArray(data) ? data : [];
+    
+    return {
+      props: {
+        bowls,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching bowls:", error);
+    return {
+      props: {
+        bowls: [],
+      },
+    };
+  }
 }
 
 export default function AdminPage({ bowls }) {
@@ -58,7 +69,7 @@ export default function AdminPage({ bowls }) {
     averageTime: 0,
   });
   const [valid, setValid] = useState(false);
-
+  const [active, setActive] = useState(true);
   useEffect(() => {
     if (!bowls.includes(noodlCode)) {
       router.push("/404");
@@ -66,6 +77,14 @@ export default function AdminPage({ bowls }) {
       setValid(true);
     }
   }, [noodlCode]);
+
+  useEffect(() => {
+    if (!Array.isArray(bowls) || !bowls.includes(noodlCode)) {
+      router.push("/404");
+    } else {
+      setValid(true);
+    }
+  }, [noodlCode, bowls, router]);
 
   useEffect(() => {
     if (noodlCode && isAuthenticated && valid) {
@@ -89,6 +108,7 @@ export default function AdminPage({ bowls }) {
       });
       const result = await response.json();
       setUsers(result["leaderboard"]);
+      setActive(result["active"]);
       const totalAttempts = result["leaderboard"].length;
       const averageScore =
         result["leaderboard"].reduce((sum, attempt) => sum + attempt.score, 0) /
@@ -137,7 +157,7 @@ export default function AdminPage({ bowls }) {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch("/api/authenticate-admin", {
+      const response = await fetch("/api/admin-handler", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -165,6 +185,38 @@ export default function AdminPage({ bowls }) {
 
   const handleLogout = () => {
     router.push("/");
+  };
+  
+  const handleDeleteQuiz = async () => {
+    try {
+      const response = await fetch("/api/admin-handler", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          quizId: noodlCode,
+        }),
+      });
+  
+      const result = await response.json();
+      
+      if (result.success) {
+        window.location.href = '/';
+      } else if (result.error === "Quiz not found") {
+        window.location.replace('/');
+        return;
+      }
+      
+    } catch (error) {
+      console.error("Error deleting quiz:", error);
+      
+      if (error.message && error.message.includes("not found")) {
+        window.location.replace('/');
+        return;
+      }
+      
+    }
   };
 
   const exportToCSV = () => {
@@ -285,6 +337,11 @@ export default function AdminPage({ bowls }) {
         </Link>
 
         <div className="ml-auto flex items-center gap-4">
+          <AdminSwitch 
+            quizId={noodlCode}
+            active={active}
+          />
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
@@ -299,12 +356,23 @@ export default function AdminPage({ bowls }) {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Admin</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => {}}>Settings</DropdownMenuItem>
-              <DropdownMenuItem onClick={exportToCSV}>
+              <DropdownMenuItem onClick={() => {}} className="cursor-pointer">Settings</DropdownMenuItem>
+              <DropdownMenuItem onClick={exportToCSV} className="cursor-pointer">
                 Export as CSV
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={handleLogout} 
+                className="text-red-500 hover:text-red-700 cursor-pointer"
+              >
+                Logout
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={handleDeleteQuiz}
+                className="text-red-500 hover:text-red-700 cursor-pointer"
+              >
+                Delete quiz
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -384,7 +452,7 @@ export default function AdminPage({ bowls }) {
                   <td className="px-4 py-3 text-right">
                   <button 
                     onClick={() => handleBanToggle(user.username)} 
-                    className={`text-${user.isBanned ? "green" : "red"}-500`}
+                    className={`text-${user.isBanned ? "green" : "red"}-500 cursor-pointer`}
                   >
                   {user.isBanned ? <FaUnlockAlt color="#50C878"/> : <FaBan />}
                   </button>
